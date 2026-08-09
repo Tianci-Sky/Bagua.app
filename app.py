@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # ==========================================
-# 1. 基础字典（跟你原来的一模一样）
+# 1. 基础字典
 # ==========================================
 gua = {
     1: "天", 2: "澤", 3: "火", 4: "雷", 
@@ -37,7 +37,7 @@ bian_gua = {
 }
 
 # ==========================================
-# 2. 核心计算逻辑（网页会调用这个）
+# 2. 关键接口！这个 @app.route 必须顶格写！
 # ==========================================
 @app.route('/divine', methods=['POST'])
 def divine():
@@ -50,20 +50,16 @@ def divine():
     except (ValueError, TypeError, KeyError):
         return jsonify({"error": "輸入格式錯誤！請輸入純數字！"})
 
-    # 校验 1-8 范围
     if num1 < 1 or num1 > 8 or num2 < 1 or num2 > 8 or num3 < 1 or num3 > 8:
         return jsonify({"error": "請輸入1-8之間的數字！"})
 
-    # 计算动爻
     yushu = (num1 + num2 + num3) % 6
     move_line = 6 if yushu == 0 else yushu
 
-    # 确定本卦名字
     shang_gua = gua[num1]
     xia_gua = gua[num2]
     bagua_name = bagua_map[(num1, num2)]
 
-    # 开始变卦逻辑
     current_shang = bian_gua[shang_gua]
     current_xia = bian_gua[xia_gua]
 
@@ -89,7 +85,6 @@ def divine():
     elif move_line == 3:
         new_shang, new_xia = current_shang, current_xia[:2] + new_char
 
-    # 找变卦的名字
     reverse_bian_gua = {v: k for k, v in bian_gua.items()}
     reverse_gua = {v: k for k, v in gua.items()}
     new_shang_gua = reverse_bian_gua[new_shang]
@@ -102,7 +97,6 @@ def divine():
         new_num2 = reverse_gua[new_xia_gua]
         new_bagua_name = bagua_map[(new_num1, new_num2)]
 
-    # 组合成你要发送给网页的最终文字
     result_text = f"""
 易經占卜：我剛剛用數字法起了一個卦，問的是：{question}
 我的三個數字分別是：{num1}，{num2}，{num3}。
@@ -115,7 +109,7 @@ def divine():
     return jsonify({"result": result_text})
 
 # ==========================================
-# 3. 启动命令（让 Render 知道怎么跑）
+# 3. 启动命令
 # ==========================================
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
