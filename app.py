@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # ==========================================
-# 1. 基础字典
+# 1. 基础字典（全部是你写的逻辑）
 # ==========================================
 gua = {
     1: "天", 2: "澤", 3: "火", 4: "雷", 
@@ -44,7 +44,23 @@ bian_gua = {
 }
 
 # ==========================================
-# 2. 关键接口！这个 @app.route 必须顶格写！
+# 2. 首页页面（有了这个，打开链接就不会 404 了）
+# ==========================================
+@app.route('/')
+def home():
+    return """
+    <h1>易經數字占卜 API</h1>
+    <p>請使用 POST 請求發送到 /divine 進行占卜。</p>
+    <p>範例：</p>
+    <pre>
+    curl -X POST https://bagua-app-xzch.onrender.com/divine \\
+      -H "Content-Type: application/json" \\
+      -d '{"num1":7,"num2":8,"num3":3,"question":"測試"}'
+    </pre>
+    """
+
+# ==========================================
+# 3. 核心接口（真正的算卦入口）
 # ==========================================
 @app.route('/divine', methods=['POST'])
 def divine():
@@ -108,15 +124,15 @@ def divine():
 易經占卜：我剛剛用數字法起了一個卦，問的是：{question}
 我的三個數字分別是：{num1}，{num2}，{num3}。
 得到的卦象是：上{shang_gua}，下{xia_gua}，{bagua_name}。
-動爻為第{chinese_num[move_line]}爻。
 變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。
+動爻為第{chinese_num[move_line]}爻。
 請為我詳細解卦，並列出行動建議。
 感謝使用數字占卜法，若有需要，請重新執行程式
 """
     return jsonify({"result": result_text})
 
 # ==========================================
-# 3. 启动命令
+# 4. 启动服务器（保持这样）
 # ==========================================
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
