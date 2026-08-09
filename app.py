@@ -108,8 +108,8 @@ def divine():
 易經占卜：我剛剛用數字法起了一個卦，問的是：{question}
 我的三個數字分別是：{num1}，{num2}，{num3}。
 得到的卦象是：上{shang_gua}，下{xia_gua}，{bagua_name}。
-變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。
 動爻為第{chinese_num[move_line]}爻。
+變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。
 請為我詳細解卦，並列出行動建議。
 感謝使用數字占卜法，若有需要，請重新執行程式
 """
