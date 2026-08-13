@@ -164,7 +164,7 @@ def divine():
         return jsonify({"result": base_result})
 
     elif mode == 'ai':
-        ai_prompt = base_result + "\n請為我詳細解此卦的吉凶，並給出3條切實可行的行動建議。\n\n【重要限制】請**不要使用任何 Markdown 標題符號（如 # 或 ##）、星號、或粗體**。請只用純文字和換行符來排版。"
+        ai_prompt = base_result + "\n請為我詳細解此卦的吉凶，並給出3條切實可行的行動建議。"
         try:
             headers = {
                 "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
