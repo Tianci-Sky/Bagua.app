@@ -1,10 +1,8 @@
 from flask import Flask, request, jsonify
-
+from flask_cors import CORS
 app = Flask(__name__)
+CORS(app)
 
-# ==========================================
-# 1. 基础字典（全部是你写的逻辑）
-# ==========================================
 gua = {
     1: "天", 2: "澤", 3: "火", 4: "雷", 
     5: "風", 6: "水", 7: "山", 8: "地"
