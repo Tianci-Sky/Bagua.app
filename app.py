@@ -178,7 +178,7 @@ def divine():
                 "https://api.deepseek.com/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=20
+                timeout=30
             )
             if ai_response.status_code == 200:
                 final_result = ai_response.json()["choices"][0]["message"]["content"]
