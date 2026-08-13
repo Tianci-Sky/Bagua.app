@@ -91,15 +91,17 @@ def divine():
         num2 = int(data['num2'])
         num3 = int(data['num3'])
         question = data['question']
-        # 【重要新增】读取用户点的是哪个按钮：base（起卦）或者 ai（AI解卦）
-        mode = data.get('mode', 'base') 
+        # 【修正 1】嚴格的 mode 過濾
+        mode = data.get('mode', 'base')
+        if mode not in ['base', 'ai']:
+            mode = 'base' 
     except (ValueError, TypeError, KeyError):
         return jsonify({"error": "輸入格式錯誤！請輸入純數字！"})
 
     if num1 < 1 or num1 > 8 or num2 < 1 or num2 > 8 or num3 < 1 or num3 > 8:
         return jsonify({"error": "請輸入1-8之間的數字！"})
 
-    # --- 1. 起卦逻辑 (这部分无论按哪个按钮都需要先算出来) ---
+    # --- 1. 起卦逻辑 ---
     yushu = (num1 + num2 + num3) % 6
     move_line = 6 if yushu == 0 else yushu
 
@@ -109,7 +111,7 @@ def divine():
 
     current_shang = bian_gua[shang_gua]
     current_xia = bian_gua[xia_gua]
-    # ... (中间找动爻、变卦的代码和你原来的一模一样，不需要动) ...
+
     if move_line == 4: target_char = current_shang[0]
     elif move_line == 5: target_char = current_shang[1]
     elif move_line == 6: target_char = current_shang[2]
@@ -156,18 +158,13 @@ def divine():
 """
 
     # ==========================================
-    # 3. 根据用户点击的按钮，决定返回什么
+    # 3. 根据 mode 决定返回什么
     # ==========================================
-    
-    # 【按钮1】如果用户点的是“起卦”按钮，直接返回上面的基础内容
     if mode == 'base':
         return jsonify({"result": base_result})
 
-    # 【按钮2】如果用户点的是“DeepSeek 解卦”按钮，去调用 AI
     elif mode == 'ai':
-        # 把基础内容作为提示词，发给 DeepSeek
         ai_prompt = base_result + "\n請為我詳細解此卦的吉凶，並給出3條切實可行的行動建議。"
-        
         try:
             headers = {
                 "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
@@ -183,17 +180,15 @@ def divine():
                 json=payload,
                 timeout=20
             )
-            
             if ai_response.status_code == 200:
                 final_result = ai_response.json()["choices"][0]["message"]["content"]
-                # 转换 Markdown
+                # 转换 Markdown 为 HTML
                 final_result = final_result.replace("###", "<h3>").replace("**", "<b>").replace("\n", "<br>")
                 return jsonify({"result": final_result})
             else:
-                return jsonify({"result": "DeepSeek 解卦伺服器暫時擁擠，請稍後再按一次。"})
-
+                return jsonify({"error": "AI 解卦伺服器暫時擁擠，請稍後再按一次。"})
         except Exception:
-            return jsonify({"result": "DeepSeek 連線失敗，請檢查網絡狀態。"})
+            return jsonify({"error": "AI 連線失敗，請檢查網絡狀態。"})
 # 4. 启动服务器（保持这样）
 # ==========================================
 if __name__ == '__main__':
