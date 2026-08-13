@@ -1,7 +1,15 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import requests  # 【新增】用来发网络请求
+import os        # 【新增】用来读取环境变量
+
 app = Flask(__name__)
 CORS(app)
+
+# ==========================================
+# 0. 读取 DeepSeek 的 API Key（从 Render 环境变量读取）
+# ==========================================
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 
 gua = {
     1: "天", 2: "澤", 3: "火", 4: "雷", 
@@ -73,7 +81,7 @@ def home():
     """
 
 # ==========================================
-# 3. 核心接口（真正的算卦入口）
+# 3. 核心接口（包含 AI 解卦）
 # ==========================================
 @app.route('/divine', methods=['POST'])
 def divine():
@@ -133,7 +141,19 @@ def divine():
         new_num2 = reverse_gua[new_xia_gua]
         new_bagua_name = bagua_map[(new_num1, new_num2)]
 
-    result_text = f"""
+    # ==========================================
+    # 3.5 请求 DeepSeek AI 解卦
+    # ==========================================
+    
+    # 1. 先打印一下，看看 Key 有没有成功读取（在 Render 的日志里能看到）
+    # 如果日志里打印出 "Key found: sk-..." 说明读取成功
+    if DEEPSEEK_API_KEY:
+        print("DeepSeek Key found!")
+    else:
+        print("DeepSeek Key is MISSING!")
+
+    # 2. 你原来写的提示词模板，现在变成发给 AI 的提示词
+    ai_prompt = f"""
 你是一名易經專家。我剛剛用數字法起了一個卦，問的是：{question}
 我的三個數字分別是：{num1}，{num2}，{num3}。
 得到的卦象是：上{shang_gua}，下{xia_gua}，{bagua_name}。
@@ -141,7 +161,34 @@ def divine():
 變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。
 請為我詳細解卦，並列出行動建議。
 """
-    return jsonify({"result": result_text})
+
+    try:
+        # 3. 发送请求给 DeepSeek 的官方接口
+        headers = {
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": ai_prompt}]
+        }
+        
+        ai_response = requests.post(
+            "https://api.deepseek.com/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        # 4. 解析返回结果
+        if ai_response.status_code == 200:
+            final_result = ai_response.json()["choices"][0]["message"]["content"]
+            return jsonify({"result": final_result})
+        else:
+            return jsonify({"result": f"DeepSeek API 返回錯誤 (狀態碼: {ai_response.status_code})，請稍後再試。"})
+
+    except Exception as e:
+        return jsonify({"result": f"與 AI 伺服器連接失敗: {str(e)}。請檢查網絡或 API Key。"})
 
 # ==========================================
 # 4. 启动服务器（保持这样）
