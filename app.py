@@ -91,12 +91,15 @@ def divine():
         num2 = int(data['num2'])
         num3 = int(data['num3'])
         question = data['question']
+        # 【重要新增】读取用户点的是哪个按钮：base（起卦）或者 ai（AI解卦）
+        mode = data.get('mode', 'base') 
     except (ValueError, TypeError, KeyError):
         return jsonify({"error": "輸入格式錯誤！請輸入純數字！"})
 
     if num1 < 1 or num1 > 8 or num2 < 1 or num2 > 8 or num3 < 1 or num3 > 8:
         return jsonify({"error": "請輸入1-8之間的數字！"})
 
+    # --- 1. 起卦逻辑 (这部分无论按哪个按钮都需要先算出来) ---
     yushu = (num1 + num2 + num3) % 6
     move_line = 6 if yushu == 0 else yushu
 
@@ -106,7 +109,7 @@ def divine():
 
     current_shang = bian_gua[shang_gua]
     current_xia = bian_gua[xia_gua]
-
+    # ... (中间找动爻、变卦的代码和你原来的一模一样，不需要动) ...
     if move_line == 4: target_char = current_shang[0]
     elif move_line == 5: target_char = current_shang[1]
     elif move_line == 6: target_char = current_shang[2]
@@ -142,55 +145,55 @@ def divine():
         new_bagua_name = bagua_map[(new_num1, new_num2)]
 
     # ==========================================
-    # 3.5 请求 DeepSeek AI 解卦
+    # 2. 准备“原本的基础卦象内容”
     # ==========================================
-    
-    # 1. 先打印一下，看看 Key 有没有成功读取（在 Render 的日志里能看到）
-    # 如果日志里打印出 "Key found: sk-..." 说明读取成功
-    if DEEPSEEK_API_KEY:
-        print("DeepSeek Key found!")
-    else:
-        print("DeepSeek Key is MISSING!")
-
-    # 2. 你原来写的提示词模板，现在变成发给 AI 的提示词
-    ai_prompt = f"""
+    base_result = f"""
 你是一名易經專家。我剛剛用數字法起了一個卦，問的是：{question}
 我的三個數字分別是：{num1}，{num2}，{num3}。
 得到的卦象是：上{shang_gua}，下{xia_gua}，{bagua_name}。
 動爻為第{chinese_num[move_line]}爻。
 變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。
-請為我詳細解卦，並列出行動建議。
 """
 
-    try:
-        # 3. 发送请求给 DeepSeek 的官方接口
-        headers = {
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": "deepseek-chat",
-            "messages": [{"role": "user", "content": ai_prompt}]
-        }
-        
-        ai_response = requests.post(
-            "https://api.deepseek.com/chat/completions",
-            headers=headers,
-            json=payload,
-            timeout=30
-        )
-        
-        # 4. 解析返回结果
-        if ai_response.status_code == 200:
-            final_result = ai_response.json()["choices"][0]["message"]["content"]
-            return jsonify({"result": final_result})
-        else:
-            return jsonify({"result": f"DeepSeek API 返回錯誤 (狀態碼: {ai_response.status_code})，請稍後再試。"})
+    # ==========================================
+    # 3. 根据用户点击的按钮，决定返回什么
+    # ==========================================
+    
+    # 【按钮1】如果用户点的是“起卦”按钮，直接返回上面的基础内容
+    if mode == 'base':
+        return jsonify({"result": base_result})
 
-    except Exception as e:
-        return jsonify({"result": f"與 AI 伺服器連接失敗: {str(e)}。請檢查網絡或 API Key。"})
+    # 【按钮2】如果用户点的是“DeepSeek 解卦”按钮，去调用 AI
+    elif mode == 'ai':
+        # 把基础内容作为提示词，发给 DeepSeek
+        ai_prompt = base_result + "\n請為我詳細解此卦的吉凶，並給出3條切實可行的行動建議。"
+        
+        try:
+            headers = {
+                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "deepseek-chat",
+                "messages": [{"role": "user", "content": ai_prompt}]
+            }
+            ai_response = requests.post(
+                "https://api.deepseek.com/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=20
+            )
+            
+            if ai_response.status_code == 200:
+                final_result = ai_response.json()["choices"][0]["message"]["content"]
+                # 转换 Markdown
+                final_result = final_result.replace("###", "<h3>").replace("**", "<b>").replace("\n", "<br>")
+                return jsonify({"result": final_result})
+            else:
+                return jsonify({"result": "DeepSeek 解卦伺服器暫時擁擠，請稍後再按一次。"})
 
-# ==========================================
+        except Exception:
+            return jsonify({"result": "DeepSeek 連線失敗，請檢查網絡狀態。"})
 # 4. 启动服务器（保持这样）
 # ==========================================
 if __name__ == '__main__':
