@@ -152,6 +152,7 @@ def divine():
 
 以上所有解卦內容必須結合我問的問題。
 """
+        
         try:
             headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
             payload = {"model": "deepseek-chat", "messages": [{"role": "user", "content": ai_prompt}]}
