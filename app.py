@@ -161,7 +161,7 @@ def divine():
         try:
             headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
             payload = {"model": "deepseek-chat", "messages": [{"role": "user", "content": ai_prompt}]}
-            ai_response = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=payload, timeout=25)
+            ai_response = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=payload, timeout=35)
             
             if ai_response.status_code == 200:
                 final_result = ai_response.json()["choices"][0]["message"]["content"]
