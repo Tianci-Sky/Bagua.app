@@ -168,8 +168,10 @@ def divine():
                 
                 final_result = final_result.replace("###", "")
                 final_result = final_result.replace("##", "")
+                final_result = final_result.replace("#", "")
                 final_result = final_result.replace(">", "")
-                final_result = final_result.replace("**", "")     
+                final_result = final_result.replace("**", "")
+                final_result = final_result.replace("*", "")
                 final_result = final_result.replace("\n\n", "<br><br>")
                 final_result = final_result.replace("\n", "<br>")
                 final_result = final_result.replace("---", "<hr style='border: 0; border-top: 1px solid #ccc; margin: 20px 0;'>")
