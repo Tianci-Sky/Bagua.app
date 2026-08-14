@@ -8,31 +8,57 @@ CORS(app)
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 
-gua = {1: "天", 2: "澤", 3: "火", 4: "雷", 5: "風", 6: "水", 7: "山", 8: "地"}
+gua = {
+    1: "天", 2: "澤", 3: "火", 4: "雷", 
+    5: "風", 6: "水", 7: "山", 8: "地"
+}
+
 chinese_num = {1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六"}
 
 bagua_map = {
+    # 第一行：下卦=天
     (1, 1): "乾為天卦", (2, 1): "澤天夬卦", (3, 1): "火天大有卦", (4, 1): "雷天大壯卦", 
     (5, 1): "風天小畜卦", (6, 1): "水天需卦", (7, 1): "山天大畜卦", (8, 1): "地天泰卦",
+    
+    # 第二行：下卦=泽
     (1, 2): "天澤履卦", (2, 2): "兌為澤卦", (3, 2): "火澤睽卦", (4, 2): "雷澤歸妹卦", 
     (5, 2): "風澤中孚卦", (6, 2): "水澤節卦", (7, 2): "山澤損卦", (8, 2): "地澤臨卦",
+
+    # 第三行：下卦=火
     (1, 3): "天火同人卦", (2, 3): "澤火革卦", (3, 3): "離為火卦", (4, 3): "雷火豐卦", 
     (5, 3): "風火家人卦", (6, 3): "水火既濟卦", (7, 3): "山火賁卦", (8, 3): "地火明夷卦",
+
+    # 第四行：下卦=雷
     (1, 4): "天雷無妄卦", (2, 4): "澤雷隨卦", (3, 4): "火雷噬嗑卦", (4, 4): "震為雷卦", 
     (5, 4): "風雷益卦", (6, 4): "水雷屯卦", (7, 4): "山雷頤卦", (8, 4): "地雷復卦",
+
+    # 第五行：下卦=风
     (1, 5): "天風姤卦", (2, 5): "澤風大過卦", (3, 5): "火風鼎卦", (4, 5): "雷風恆卦", 
     (5, 5): "巽為風卦", (6, 5): "水風井卦", (7, 5): "山風蠱卦", (8, 5): "地風升卦",
+
+    # 第六行：下卦=水
     (1, 6): "天水訟卦", (2, 6): "澤水困卦", (3, 6): "火水未濟卦", (4, 6): "雷水解卦", 
     (5, 6): "風水渙卦", (6, 6): "坎為水卦", (7, 6): "山水蒙卦", (8, 6): "地水師卦",
+
+    # 第七行：下卦=山
     (1, 7): "天山遯卦", (2, 7): "澤山咸卦", (3, 7): "火山旅卦", (4, 7): "雷山小過卦", 
     (5, 7): "風山漸卦", (6, 7): "水山蹇卦", (7, 7): "艮為山卦", (8, 7): "地山謙卦",
+
+    # 第八行：下卦=地
     (1, 8): "天地否卦", (2, 8): "澤地萃卦", (3, 8): "火地晉卦", (4, 8): "雷地豫卦", 
     (5, 8): "風地觀卦", (6, 8): "水地比卦", (7, 8): "山地剝卦", (8, 8): "坤為地卦",
 }
 
+# 注意看这个顺序：第1个数代表上爻，第2个数代表中爻，第3个数代表下爻
 bian_gua = {
-    "天": "111", "澤": "110", "火": "101", "雷": "100",
-    "風": "011", "水": "010", "山": "001", "地": "000"
+    "天": "111",  # 阳阳阳
+    "澤": "110",  # 阳阳阴
+    "火": "101",  # 阳阴阳
+    "雷": "100",  # 阳阴阴
+    "風": "011",  # 阴阳阳
+    "水": "010",  # 阴阳阴
+    "山": "001",  # 阴阴阳
+    "地": "000"   # 阴阴阴
 }
 
 @app.route('/')
@@ -81,17 +107,25 @@ def divine():
     elif move_line == 3: target_char = current_xia[2]
 
     new_char = '0' if target_char == '1' else '1'
-    if move_line == 4: new_shang, new_xia = new_char + current_shang[1:], current_xia
-    elif move_line == 5: new_shang, new_xia = current_shang[0] + new_char + current_shang[2:], current_xia
-    elif move_line == 6: new_shang, new_xia = current_shang[:2] + new_char, current_xia
-    elif move_line == 1: new_shang, new_xia = current_shang, new_char + current_xia[1:]
-    elif move_line == 2: new_shang, new_xia = current_shang, current_xia[0] + new_char + current_xia[2:]
-    elif move_line == 3: new_shang, new_xia = current_shang, current_xia[:2] + new_char
+
+    if move_line == 4:
+        new_shang, new_xia = new_char + current_shang[1:], current_xia
+    elif move_line == 5:
+        new_shang, new_xia = current_shang[0] + new_char + current_shang[2:], current_xia
+    elif move_line == 6:
+        new_shang, new_xia = current_shang[:2] + new_char, current_xia
+    elif move_line == 1:
+        new_shang, new_xia = current_shang, new_char + current_xia[1:]
+    elif move_line == 2:
+        new_shang, new_xia = current_shang, current_xia[0] + new_char + current_xia[2:]
+    elif move_line == 3:
+        new_shang, new_xia = current_shang, current_xia[:2] + new_char
 
     reverse_bian_gua = {v: k for k, v in bian_gua.items()}
     reverse_gua = {v: k for k, v in gua.items()}
     new_shang_gua = reverse_bian_gua[new_shang]
     new_xia_gua = reverse_bian_gua[new_xia]
+
     if (new_shang_gua, new_xia_gua) in bagua_map:
         new_bagua_name = bagua_map[(new_shang_gua, new_xia_gua)]
     else:
@@ -99,27 +133,41 @@ def divine():
         new_num2 = reverse_gua[new_xia_gua]
         new_bagua_name = bagua_map[(new_num1, new_num2)]
 
-    base_result = f"""你是一名易經專家。我剛剛用數字法起了一個卦，問的是：{question}
+    base_result = f"""
+你是一名易經專家。我剛剛用數字法起了一個卦，問的是：{question}
 我的三個數字分別是：{num1}，{num2}，{num3}。
+第一個數字代表上卦，第二個數字代表下卦，三個數字加起來除六，餘數為動爻(餘數為零時，動爻為第六爻)
 得到的卦象是：上{shang_gua}，下{xia_gua}，{bagua_name}。
 動爻為第{chinese_num[move_line]}爻。
-變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。"""
+變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。
+"""
 
     if mode == 'base':
         return jsonify({"result": base_result})
 
     elif mode == 'ai':
-        ai_prompt = base_result + "\n請為我詳細解此卦的吉凶，並給出3條切實可行的行動建議。"
+        # 【核心修改】按你要求，将 AI 提示词替换为你提供的详细结构模板
+        ai_prompt = f"""{base_result}
+請為我詳細解卦，包括但不限於：形容本卦的卦象；列出卦辭、象辭和彖辭並用白話解釋；動爻的爻辭和意義；動爻的屬性變化（由陽轉陰或由陰轉陽）；變卦的卦象和對我的意義；綜合行動建議。
+
+以上所有解卦內容必須結合我問的問題。
+"""
         try:
             headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
             payload = {"model": "deepseek-chat", "messages": [{"role": "user", "content": ai_prompt}]}
-            ai_response = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=payload, timeout=20)
+            ai_response = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=payload, timeout=25)
             
             if ai_response.status_code == 200:
                 final_result = ai_response.json()["choices"][0]["message"]["content"]
-                # 【关键修改】：把 ### 标题改为 【】，把 ** 改为 **，Wix 将完全无法识别为 H 标题！
-                final_result = final_result.replace("###", "【")
-                final_result = final_result.replace("**", "")
+                
+                # 依然保留格式化替换，确保在 Wix 上排版正常，不会出现超大标题
+                final_result = final_result.replace("###", "【")  
+                final_result = final_result.replace("**", "")     
+                
+                # 处理换行，让 AI 分段正常在 Wix 里显示
+                final_result = final_result.replace("\n\n", "<br><br>")
+                final_result = final_result.replace("\n", "<br>")
+                
                 return jsonify({"result": final_result})
             else:
                 return jsonify({"error": "AI 解卦伺服器暫時擁擠，請稍後再按一次。"})
