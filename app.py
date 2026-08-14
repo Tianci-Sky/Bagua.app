@@ -6,6 +6,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# ==========================================
+# 0. 读取 DeepSeek 的 API Key（从 Render 环境变量读取）
+# ==========================================
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 
 gua = {
@@ -133,6 +136,7 @@ def divine():
         new_num2 = reverse_gua[new_xia_gua]
         new_bagua_name = bagua_map[(new_num1, new_num2)]
 
+    # 算完卦象后准备的基础信息模板（现在包含你要求的指示了！）
     base_result = f"""
 你是一名易經專家。我剛剛用數字法起了一個卦，問的是：{question}
 我的三個數字分別是：{num1}，{num2}，{num3}。
@@ -140,18 +144,19 @@ def divine():
 得到的卦象是：上{shang_gua}，下{xia_gua}，{bagua_name}。
 動爻為第{chinese_num[move_line]}爻。
 變卦為：上{new_shang_gua}，下{new_xia_gua}，{new_bagua_name}。
-"""
 
-    if mode == 'base':
-        return jsonify({"result": base_result})
-
-    elif mode == 'ai':
-        # 【核心修改】按你要求，将 AI 提示词替换为你提供的详细结构模板
-        ai_prompt = f"""{base_result}
 請為我詳細解卦，包括但不限於：形容本卦的卦象；列出卦辭、象辭和彖辭並用白話解釋；動爻的爻辭和意義；動爻的屬性變化（由陽轉陰或由陰轉陽）；變卦的卦象和對我的意義；綜合行動建議。
 
 以上所有解卦內容必須結合我問的問題。
 """
+
+    if mode == 'base':
+        # 直接返回包含指令的详细提示，让用户知道 AI 会怎么解
+        return jsonify({"result": base_result})
+
+    elif mode == 'ai':
+        # 在 AI 模式下，直接把 base_result（包含了解卦指令）发给 AI
+        ai_prompt = base_result
         
         try:
             headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
@@ -161,11 +166,8 @@ def divine():
             if ai_response.status_code == 200:
                 final_result = ai_response.json()["choices"][0]["message"]["content"]
                 
-                # 依然保留格式化替换，确保在 Wix 上排版正常，不会出现超大标题
                 final_result = final_result.replace("###", "【")  
                 final_result = final_result.replace("**", "")     
-                
-                # 处理换行，让 AI 分段正常在 Wix 里显示
                 final_result = final_result.replace("\n\n", "<br><br>")
                 final_result = final_result.replace("\n", "<br>")
                 
