@@ -169,6 +169,7 @@ def divine():
                 final_result = final_result.replace("###", "")
                 final_result = final_result.replace("##", "")
                 final_result = final_result.replace("#", "")
+                final_result = final_result.replace("|", "")
                 final_result = final_result.replace(">", "")
                 final_result = final_result.replace("**", "")
                 final_result = final_result.replace("*", "")
