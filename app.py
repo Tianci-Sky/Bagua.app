@@ -166,7 +166,9 @@ def divine():
             if ai_response.status_code == 200:
                 final_result = ai_response.json()["choices"][0]["message"]["content"]
                 
-                final_result = final_result.replace("###", "【")  
+                final_result = final_result.replace("###", "【")
+                final_result = final_result.replace("##", "【")
+                final_result = final_result.replace(">", "")
                 final_result = final_result.replace("**", "")     
                 final_result = final_result.replace("\n\n", "<br><br>")
                 final_result = final_result.replace("\n", "<br>")
